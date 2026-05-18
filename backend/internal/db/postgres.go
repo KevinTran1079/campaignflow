@@ -19,7 +19,7 @@ func NewPG(ctx context.Context, connString string) (*Postgres, error) {
 
 	pgInstance := &Postgres{db: dbpool}
 
-	if err := pgInstance.db.Ping(ctx); err != nil {
+	if err := pgInstance.Ping(ctx); err != nil {
 		dbpool.Close()
 		return nil, err
 	}
