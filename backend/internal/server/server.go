@@ -11,28 +11,28 @@ import (
 
 type Options struct {
 	Address string
-	Port int
-	Logger *slog.Logger
+	Port    int
+	Logger  *slog.Logger
 }
 
 type Server struct {
 	httpServer *http.Server
-	mux *http.ServeMux
-	logger *slog.Logger
+	mux        *http.ServeMux
+	logger     *slog.Logger
 }
 
 func New(options Options) *Server {
 	mux := http.NewServeMux()
 
 	s := &Server{
-		mux: mux,
+		mux:    mux,
 		logger: options.Logger,
 	}
 
 	s.routes()
 
 	s.httpServer = &http.Server{
-		Addr: net.JoinHostPort(options.Address, strconv.Itoa(options.Port)),
+		Addr:    net.JoinHostPort(options.Address, strconv.Itoa(options.Port)),
 		Handler: mux,
 	}
 
