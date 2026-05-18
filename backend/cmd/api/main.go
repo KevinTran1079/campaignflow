@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/KevinTran1079/campaignflow/internal/config"
+	"github.com/KevinTran1079/campaignflow/internal/db"
 	"github.com/KevinTran1079/campaignflow/internal/logger"
 	"github.com/KevinTran1079/campaignflow/internal/server"
 )
@@ -36,10 +37,17 @@ func run() error {
 		return fmt.Errorf("initialize logger: %w", err)
 	}
 
+	pg, err := db.NewPG(context.Background(), cfg.DatabaseURL)
+	if err != nil {
+		return fmt.Errorf("initialize db: %w", err)
+	}
+	defer pg.Close()
+
 	serverOptions := server.Options{
 		Address: cfg.ServerAddress,
 		Port:    cfg.ServerPort,
 		Logger:  appLogger,
+		DB:      pg,
 	}
 
 	srv := server.New(serverOptions)

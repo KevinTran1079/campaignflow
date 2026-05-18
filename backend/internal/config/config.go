@@ -15,6 +15,7 @@ const (
 	defaultServerPort      = "8080"
 	defaultLogLevel        = "info"
 	defaultShutdownTimeout = "10s"
+	defaultDatabaseURL     = "postgres://campaignflow:campaignflow@localhost:5432/campaignflow?sslmode=disable"
 )
 
 var allowedAppEnvironments = map[string]struct{}{
@@ -36,6 +37,7 @@ type Config struct {
 	ServerPort      int
 	LogLevel        string
 	ShutdownTimeout time.Duration
+	DatabaseURL     string
 }
 
 func LoadConfig() (*Config, error) {
@@ -73,12 +75,15 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("SHUTDOWN_TIMEOUT must be greater than 0, got %s", shutdownTimeout)
 	}
 
+	databaseURL := envOrDefault("DATABASE_URL", defaultDatabaseURL)
+
 	return &Config{
 		AppEnvironment:  appEnvironment,
 		ServerAddress:   serverAddress,
 		ServerPort:      serverPort,
 		LogLevel:        logLevel,
 		ShutdownTimeout: shutdownTimeout,
+		DatabaseURL:     databaseURL,
 	}, nil
 }
 

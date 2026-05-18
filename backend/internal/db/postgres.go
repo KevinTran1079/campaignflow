@@ -19,7 +19,7 @@ func NewPG(ctx context.Context, connString string) (*Postgres, error) {
 
 	pgInstance := &Postgres{db: dbpool}
 
-	if err := pgInstance.Ping(ctx); err != nil {
+	if err := pgInstance.db.Ping(ctx); err != nil {
 		dbpool.Close()
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func NewPG(ctx context.Context, connString string) (*Postgres, error) {
 }
 
 func (pg *Postgres) Ping(ctx context.Context) error {
-	if err := pg.Ping(ctx); err != nil {
+	if err := pg.db.Ping(ctx); err != nil {
 		return fmt.Errorf("ping db: %w", err)
 	}
 	return nil

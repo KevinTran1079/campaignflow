@@ -13,12 +13,18 @@ type Options struct {
 	Address string
 	Port    int
 	Logger  *slog.Logger
+	DB      Pinger
+}
+
+type Pinger interface {
+	Ping(ctx context.Context) error
 }
 
 type Server struct {
 	httpServer *http.Server
 	mux        *http.ServeMux
 	logger     *slog.Logger
+	db         Pinger
 }
 
 func New(options Options) *Server {
@@ -27,6 +33,7 @@ func New(options Options) *Server {
 	s := &Server{
 		mux:    mux,
 		logger: options.Logger,
+		db:     options.DB,
 	}
 
 	s.routes()
