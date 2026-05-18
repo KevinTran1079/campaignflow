@@ -14,6 +14,7 @@ const (
 	defaultServerAddress   = "127.0.0.1"
 	defaultServerPort      = "8080"
 	defaultLogLevel        = "info"
+	defaultStartupTimeout  = "10s"
 	defaultShutdownTimeout = "10s"
 	defaultDatabaseURL     = "postgres://campaignflow:campaignflow@localhost:5432/campaignflow?sslmode=disable"
 )
@@ -36,6 +37,7 @@ type Config struct {
 	ServerAddress   string
 	ServerPort      int
 	LogLevel        string
+	StartupTimeout  time.Duration
 	ShutdownTimeout time.Duration
 	DatabaseURL     string
 }
@@ -66,6 +68,15 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("LOG_LEVEL must be one of debug, info, warn, error, got %q", logLevel)
 	}
 
+	startupTimeout, err := time.ParseDuration(envOrDefault("STARTUP_TIMEOUT", defaultStartupTimeout))
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse STARTUP_TIMEOUT: %w", err)
+	}
+
+	if startupTimeout <= 0 {
+		return nil, fmt.Errorf("STARTUP_TIMEOUT must be greater than 0, got %s", startupTimeout)
+	}
+
 	shutdownTimeout, err := time.ParseDuration(envOrDefault("SHUTDOWN_TIMEOUT", defaultShutdownTimeout))
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse SHUTDOWN_TIMEOUT: %w", err)
@@ -82,6 +93,7 @@ func LoadConfig() (*Config, error) {
 		ServerAddress:   serverAddress,
 		ServerPort:      serverPort,
 		LogLevel:        logLevel,
+		StartupTimeout:  startupTimeout,
 		ShutdownTimeout: shutdownTimeout,
 		DatabaseURL:     databaseURL,
 	}, nil

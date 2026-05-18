@@ -37,7 +37,10 @@ func run() error {
 		return fmt.Errorf("initialize logger: %w", err)
 	}
 
-	pg, err := db.NewPG(context.Background(), cfg.DatabaseURL)
+	startupCtx, cancel := context.WithTimeout(context.Background(), cfg.StartupTimeout)
+	defer cancel()
+
+	pg, err := db.NewPG(startupCtx, cfg.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("initialize db: %w", err)
 	}
