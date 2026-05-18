@@ -1,0 +1,52 @@
+package server
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"net"
+	"net/http"
+	"strconv"
+)
+
+type Options struct {
+	Address string
+	Port int
+	Logger *slog.Logger
+}
+
+type Server struct {
+	httpServer *http.Server
+	mux *http.ServeMux
+	logger *slog.Logger
+}
+
+func New(options Options) *Server {
+	mux := http.NewServeMux()
+
+	s := &Server{
+		mux: mux,
+		logger: options.Logger,
+	}
+
+	s.routes()
+
+	s.httpServer = &http.Server{
+		Addr: net.JoinHostPort(options.Address, strconv.Itoa(options.Port)),
+		Handler: mux,
+	}
+
+	return s
+}
+
+func (s *Server) ListenAndServe() error {
+	err := s.httpServer.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+	return nil
+}
+
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.httpServer.Shutdown(ctx)
+}
