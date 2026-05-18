@@ -7,16 +7,33 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func New(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
-	dbpool, err := pgxpool.New(ctx, databaseURL)
+type Postgres struct {
+	db *pgxpool.Pool
+}
+
+func NewPG(ctx context.Context, connString string) (*Postgres, error) {
+	dbpool, err := pgxpool.New(ctx, connString)
 	if err != nil {
 		return nil, fmt.Errorf("create db pool: %w", err)
 	}
 
-	if err := dbpool.Ping(ctx); err != nil {
+	pgInstance := &Postgres{db: dbpool}
+
+	if err := pgInstance.Ping(ctx); err != nil {
 		dbpool.Close()
-		return nil, fmt.Errorf("ping db: %w", err)
+		return nil, err
 	}
 
-	return dbpool, nil
+	return pgInstance, nil
+}
+
+func (pg *Postgres) Ping(ctx context.Context) error {
+	if err := pg.Ping(ctx); err != nil {
+		return fmt.Errorf("ping db: %w", err)
+	}
+	return nil
+}
+
+func (pg *Postgres) Close() {
+	pg.db.Close()
 }
