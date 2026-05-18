@@ -14,6 +14,10 @@ Use `docs/implementation-plan.md` as the product and architecture reference. The
 
 Keep the plan current as the project progresses. When a milestone is completed, changed, deferred, or replaced, update the relevant section so the document reflects the current project direction.
 
+## README Maintenance
+
+Keep `README.md` current as the application evolves. When setup steps, scripts, services, environment variables, commands, or completed capabilities change, update the README in the same workstream so it remains accurate for local development and deployment.
+
 ## Go Style Guide
 
 Follow Uber's Go Style Guide for Go code style and review feedback.
