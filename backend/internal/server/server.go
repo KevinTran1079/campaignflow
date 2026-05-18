@@ -27,7 +27,7 @@ type Server struct {
 	db         Pinger
 }
 
-func New(options Options) *Server {
+func NewServer(options Options) *Server {
 	mux := http.NewServeMux()
 
 	s := &Server{

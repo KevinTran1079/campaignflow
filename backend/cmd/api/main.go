@@ -50,7 +50,7 @@ func run() error {
 		DB:      pg,
 	}
 
-	srv := server.New(serverOptions)
+	srv := server.NewServer(serverOptions)
 
 	serverErr := make(chan error, 1)
 	go func() {
