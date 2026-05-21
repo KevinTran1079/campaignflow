@@ -9,8 +9,9 @@ import (
 )
 
 type AccessClaims struct {
-	OrgID string
-	Role  string
+	OrgID string `json:"org_id"`
+	Role  string `json:"role"`
+
 	jwt.RegisteredClaims
 }
 
@@ -22,23 +23,24 @@ type TokenService struct {
 
 func NewTokenService(secret string, ttl time.Duration) (*TokenService, error) {
 	if secret == "" {
-		return nil, fmt.Errorf("null string")
+		return nil, errors.New("secret is required")
 	}
 
-	if ttl < 0 {
-		return nil, fmt.Errorf("ttl < 0")
+	if ttl <= 0 {
+		return nil, errors.New("ttl must be greater than 0")
 	}
 
-	tokenSerivce := &TokenService{
+	tokenService := &TokenService{
 		secret: []byte(secret),
 		ttl:    ttl,
+		now:    time.Now,
 	}
 
-	return tokenSerivce, nil
+	return tokenService, nil
 }
 
-func (s *TokenService) IssueAccessToken(userId string, orgID string, role string) (string, error) {
-	if userId == "" {
+func (s *TokenService) IssueAccessToken(userID string, orgID string, role string) (string, error) {
+	if userID == "" {
 		return "", errors.New("userID is required")
 	}
 
@@ -50,13 +52,14 @@ func (s *TokenService) IssueAccessToken(userId string, orgID string, role string
 		return "", errors.New("role is required")
 	}
 
+	now := s.currentTime()
 	claims := AccessClaims{
 		OrgID: orgID,
 		Role:  role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   userId,
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.ttl)),
+			Subject:   userID,
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(s.ttl)),
 		},
 	}
 
@@ -70,19 +73,49 @@ func (s *TokenService) IssueAccessToken(userId string, orgID string, role string
 }
 
 func (s *TokenService) ParseAccessToken(tokenString string) (*AccessClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &AccessClaims{}, func(token *jwt.Token) (any, error) {
-		return []byte(s.secret), nil
-	})
-
-	if err != nil {
-		return nil, fmt.Errorf("parsing token error: %w", err)
+	if tokenString == "" {
+		return nil, errors.New("access token is required")
 	}
 
-	claims, ok := token.Claims.(*AccessClaims)
+	claims := &AccessClaims{}
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		claims,
+		func(token *jwt.Token) (any, error) {
+			return s.secret, nil
+		},
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+		jwt.WithTimeFunc(s.currentTime),
+		jwt.WithExpirationRequired(),
+	)
 
-	if !ok {
-		return nil, fmt.Errorf("parsing claims error: %w", err)
+	if err != nil {
+		return nil, fmt.Errorf("parse access token: %w", err)
+	}
+
+	if !token.Valid {
+		return nil, errors.New("access token is invalid")
+	}
+
+	if claims.Subject == "" {
+		return nil, errors.New("access token subject is required")
+	}
+
+	if claims.OrgID == "" {
+		return nil, errors.New("access token org_id is required")
+	}
+
+	if claims.Role == "" {
+		return nil, errors.New("access token role is required")
 	}
 
 	return claims, nil
+}
+
+func (s *TokenService) currentTime() time.Time {
+	if s.now == nil {
+		return time.Now()
+	}
+
+	return s.now()
 }
